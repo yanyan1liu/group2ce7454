@@ -74,7 +74,7 @@ def main(iniModel, setting):
         import Util_V2 as U
    
     if setting['model'] == "DecayByBatch":
-        optimizer = Adam(lr=setting["lr"], decay = setting['decay'] )
+        optimizer = Adam(lr=setting["lr"])
         CallBackFun = U.lr_minimum()
     elif setting['model'] == "DecayByEpoch":
         optimizer = Adam(lr=setting["lr"])
@@ -85,10 +85,11 @@ def main(iniModel, setting):
     elif setting['loss'] == 'Loss_v3':
         lossFunction = U.Loss_v3  
     
-    folderCount = 2
+    folderCount = 1
     isDone = False
     for count in range(0, folderCount, 1):
         srcDir = "group2/images/" + str(count)
+        #srcDir = "D:/Dataset/YoLo/group2/images/23"
         print("+++ run: "+ srcDir + " " + str(datetime.now()) + "+++")
         
         train_data, train_label = load_DATA(srcDir)
@@ -98,15 +99,15 @@ def main(iniModel, setting):
 
         if iniModel:
             model = yolo.network_architecture(input_data=[640, 480, 3])
-            #model = multi_gpu_model(model, gpus=4)
+#            model = multi_gpu_model(model, gpus=1)
             model.compile(optimizer=optimizer, loss=lossFunction)
             iniModel = False
         elif not isDone:
             model = load_model(setting["weight_file"], custom_objects={setting["loss"]: lossFunction})
-            #model = multi_gpu_model(model, gpus=4)
+#            model = multi_gpu_model(model, gpus=1)
         isDone = True
-        
-        history = model.fit(x=train_data, y=train_label, batch_size=setting["batch_size"], 
+
+        history = model.fit(x=train_data, y=train_label, batch_size=setting["batch_size"],
                             epochs=setting["epochs"], callbacks=[CallBackFun])
         f = open(setting["loss_file"], "a+")
         f.write("\n")

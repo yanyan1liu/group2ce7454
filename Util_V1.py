@@ -10,7 +10,8 @@ from settings import setting
 weight_Classification_loss = setting["weight_Classification_loss"]
 weight_Object_loss = setting["weight_Object_loss"]
 weight_Localization_loss = setting["weight_Localization_loss"]
-
+_batch_size = setting['batch_size']
+_epoch = 0
 Constant_Classification = 10
 #####
 initial_lr = 0.01
@@ -33,7 +34,7 @@ class DecayByEpoch(keras.callbacks.Callback):
     def on_epoch_end(self, epoch, log=[]):
         global Hdecay
         new_lr = initial_lr * 1.0 / (1.0 + Hdecay * epoch)
-        if K.eval(K.greater(x=initial_lr / new_lr, y=lr_minimum_rate)):
+        if initial_lr / new_lr > lr_minimum_rate:
             lr = self.model.optimizer.lr
         else:
             K.set_value(self.model.optimizer.lr, new_lr)
@@ -42,15 +43,20 @@ class DecayByEpoch(keras.callbacks.Callback):
 
 class lr_minimum(keras.callbacks.Callback):
     def on_batch_end(self, batch, log=[]):
-        lr = self.model.optimizer.lr
-        lr = K.eval(lr * 1.0 / (K.cast(self.model.optimizer.iterations, K.dtype(self.model.optimizer.decay)) * self.model.optimizer.decay + 1))
-        if K.eval(K.greater(x=initial_lr / lr, y=lr_minimum_rate)):
+        global Hdecay, _epoch, _batch_size
+        iterations = batch + _epoch * 1000.0 / _batch_size
+        print('iterations:', iterations)
+        new_lr = initial_lr * 1.0 / (1.0 + Hdecay * iterations)
+        print('The New_lr:', new_lr)
+        if initial_lr / new_lr > lr_minimum_rate:
             K.set_value(self.model.optimizer.lr, initial_lr/lr_minimum_rate)
-            print('After changed lr:', K.eval(self.model.optimizer.lr))
+        else:
+            K.set_value(self.model.optimizer.lr, new_lr)
     def on_epoch_end(self, epoch, log=[]):
         lr = self.model.optimizer.lr
-        print('Each epoch, the lr is', K.eval(lr/(K.cast(self.model.optimizer.iterations, K.dtype(self.model.optimizer.decay)) * self.model.optimizer.decay + 1)))
-
+        global _epoch
+        _epoch += 1
+        print('Each epoch, the lr is', K.eval(lr))
 
 def transform_to_coordinate(x, y, w, h):
     x1 = x - K.cast(w / 2, 'float32')

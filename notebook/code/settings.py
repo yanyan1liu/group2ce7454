@@ -7,7 +7,7 @@ settings = {
         "weight_Localization_loss": 1,
         "lr": 0.01,
         "decay": 0.01,
-        "weight_file": "weight-setting5",
+        "weight_file": "weight-setting7",
         "loss_file": "losses-setting5.txt",
         "batch_size": 50,
         "epochs": 250

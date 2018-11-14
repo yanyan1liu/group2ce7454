@@ -61,18 +61,12 @@ def load_DATA(srcDir):
     train_label[:, :, :, 5] = np.arange(0, 14, 1).reshape(1, 14)
     return [train_data, train_label]
 
-
 # initModel is a sign for if we already have a trained model stored in .h5 file.
 def main(iniModel, setting):      
     # Choosing different architecture
-    if setting["architecture"] == "Yolo_V1":
-        import Yolo_V1 as yolo
-        import Util_V1 as U     
-    elif setting["architecture"] == "Yolo_V2":
-        import Yolo_V2 as yolo
-        import Util_V2 as U
-        
-        
+    import net_2 as yolo
+    import Util_V2 as U
+         
     # Choosing different decay mechanism
     if setting['model'] == "DecayByBatch":
         optimizer = Adam(lr=setting["lr"])
@@ -95,7 +89,7 @@ def main(iniModel, setting):
     folderCount = 1
     isDone = False
     for count in range(0, folderCount, 1):
-        srcDir = "src/" + count 
+        srcDir = "group2/images/" + count 
         print("+++ run: "+ srcDir + " " + str(datetime.now()) + "+++")
         train_data, train_label = load_DATA(srcDir)
         
@@ -111,7 +105,7 @@ def main(iniModel, setting):
             plot_model(model=model, to_file='Architecture.png', show_layer_names=False)
             SVG(model_to_dot(model).create(prog='dot', format='svg'))
         elif not isDone:
-            model = load_model(setting["weight_file"], custom_objects={setting["loss"]: lossFunction})
+            model = load_model(str(setting["weight_file"]+'.h5'), custom_objects={setting["loss"]: lossFunction})
 #             model = multi_gpu_model(model, gpus=4)
         isDone = True
         
@@ -128,11 +122,11 @@ def main(iniModel, setting):
         f.write(str(history.history))
         f.close()
         print("+++ saved: " + str(datetime.now()) + "+++")
-        model.save(setting["weight_file"])
+        model.save(str(setting["weight_file"]+'.h5'))
         
 print("+++ start: " + str(datetime.now()) + "+++")
 iniModel = True
-if os.path.isfile(setting["weight_file"]):
+if os.path.isfile(str(setting["weight_file"]+'.h5')):
     iniModel = False
 main(iniModel, setting)
 print("+++ finished: " + str(datetime.now()) + "+++")

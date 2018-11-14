@@ -142,9 +142,9 @@ def Testing_Performance_classification(y_true, y_pred):
 
 if __name__ == '__main__':
     # loading an existed model
-    model = load_model(setting["weight_file"], custom_objects={setting["loss"]: lossFunction})
+    model = load_model(str(setting["weight_file"]+'.h5'), custom_objects={setting["loss"]: lossFunction})
 #     model = multi_gpu_model(model, gpus=4)
-    srcDir = "images/1"
+    srcDir = "group/images/1"
     print("+++ run: " + srcDir + " " + str(datetime.now()) + "+++")
     
     # loading the data

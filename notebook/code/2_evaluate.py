@@ -1,16 +1,17 @@
 import keras.backend as K
 from keras.models import load_model
+import keras.models
 import xml.etree.ElementTree as ET
 from keras.preprocessing.image import load_img, img_to_array, array_to_img
 from keras.optimizers import Adam
 import numpy as np
 import tensorflow as tf
 from datetime import datetime
-from keras.utils import multi_gpu_model
 import os
 from settings import setting
 import cv2
 from keras.utils.np_utils import to_categorical
+img_count = 0
 ############################################
 import Util_V2 as U
 if setting['model'] == "DecayByBatch":
@@ -24,14 +25,16 @@ elif setting['loss'] == 'Loss_v3':
 #############################################
 
 
-def LOAD_IMAGE(path):
+def LOAD_IMAGE(path = 'C:/Users/ZJZ20\Downloads/DeepLearnData/img_0.jpg'):
     image1 = load_img(path)
     train_example = img_to_array(image1, data_format='channels_first')
     img = array_to_img(train_example, data_format='channels_first')
+#    img.show()
     train_example = train_example.transpose()
     return train_example
 
-def readXML(f):
+
+def readXML(f='C:/Users/ZJZ20\Downloads/DeepLearnData/img_0.xml'):
     mapped = {}
     tree = ET.parse(f)
     root = tree.getroot()
@@ -53,10 +56,12 @@ def readXML(f):
     yTrue[:, :] = [xmax, xmin, ymax, ymin, 0, 0, C_index]
     return yTrue
 
+
 def load_DATA(srcDir):
     fileCount = len([name for name in os.listdir(srcDir) if name.endswith(".xml")])
     train_data = np.empty(shape=[fileCount, 640, 480, 3], dtype='float32')
     train_label = np.empty(shape=[fileCount, 19, 14, 7], dtype='float32')
+
     count = 0
     for filename in os.listdir(srcDir):
         if not filename.endswith(".xml"): continue
@@ -71,6 +76,7 @@ def load_DATA(srcDir):
     train_label[:, :, :, 5] = np.arange(0, 14, 1).reshape(1, 14)
     return [train_data, train_label]
 
+
 # there is a hyperparameter, to judge if the boxes hit the targets.
 # the rule is if the ratio of the overlap area is more than a threshold, 
 # in comparison with the union areas between the actual box and the predicted box.
@@ -82,9 +88,12 @@ def Matching(x1_pred, y1_pred, x2_pred, y2_pred, x_max_true, x_min_true, y_max_t
     intersect_y1 = K.maximum(y1_pred, y_min_true)
     intersect_x2 = K.minimum(x2_pred, x_max_true)
     intersect_y2 = K.minimum(y2_pred, y_max_true)
+
     area_1 = (x2_pred - x1_pred) * (y2_pred - y1_pred)
     area_2 = (x_max_true - x_min_true) * (y_max_true - y_min_true)
+
     intersect_area = (intersect_x2 - intersect_x1) * (intersect_y2 - intersect_y1)
+
     IOU = intersect_area / (area_1 + area_2 - intersect_area)
     matching = K.greater_equal(IOU, 0.7)
     return matching
@@ -99,11 +108,12 @@ def Testing_Performance_location(y_true, y_pred):
     x2 = K.reshape(x=x2, shape=(setting['batch_size'], -1, 1))
     y1 = K.reshape(x=y1, shape=(setting['batch_size'], -1, 1))
     y2 = K.reshape(x=y2, shape=(setting['batch_size'], -1, 1))
-    x1_pred = x1
-    y1_pred = y1
-    x2_pred = x2
-    y2_pred = y2
-    
+    Boxes = K.concatenate([x1, y1, x2, y2])
+    x1_pred = Boxes[:, :, 0]
+    y1_pred = Boxes[:, :, 1]
+    x2_pred = Boxes[:, :, 2]
+    y2_pred = Boxes[:, :, 3]
+
     # obtain the actual coordinates in each image
     x_max_true = y_true[:, 0, 0, 0]
     x_min_true = y_true[:, 0, 0, 1]
@@ -140,6 +150,7 @@ def Testing_Performance_classification(y_true, y_pred):
     # compute the accuracy on the classification
     return K.cast(tf.count_nonzero(input_tensor=class_match), 'float32') / setting['batch_size']
 
+
 if __name__ == '__main__':
     # loading an existed model
     model = load_model(str(setting["weight_file"]+'.h5'), custom_objects={setting["loss"]: lossFunction})
@@ -147,15 +158,15 @@ if __name__ == '__main__':
     srcDir = "group2/images/1"
     print("+++ run: " + srcDir + " " + str(datetime.now()) + "+++")
     
+    # recompile the model with the two self-design metrics
+    model.compile(optimizer=optimizer, loss=lossFunction, metrics=[Testing_Performance_location, Testing_Performance_classification])
+    
     # loading the data
     train_data, train_label = load_DATA(srcDir=srcDir)
     one_hot_encoding = to_categorical(y=train_label[:, :, :, 6], num_classes=10)
     train_label = np.concatenate((train_label, one_hot_encoding), axis = -1)
     
-    # recompile the model with the two self-design metrics
-    model.compile(optimizer=optimizer, loss=lossFunction, metrics=[Testing_Performance_location, Testing_Performance_classification])
-    
     # evaluate it and output results
     loss_and_metrics = model.evaluate(x=train_data, y=train_label, batch_size=setting['batch_size'])
-    print('location_loss', loss_and_metrics[1])
-    print('classification_loss', loss_and_metrics[2])
+    print('location_accuracy', loss_and_metrics[1])
+    print('classification_accuracy', loss_and_metrics[2])

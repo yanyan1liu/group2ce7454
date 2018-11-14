@@ -113,6 +113,7 @@ if __name__ == '__main__':
     # predict
     results = model.predict(x=train_data, batch_size=setting['batch_size'])
     setting['batch_size'] = results.shape[0]
+    results = tf.convert_to_tensor(results)
     Boxes, Classes, Scores = U.generating_consequences(results)
     x1, y1, x2, y2 = U.transform_to_coordinate(Boxes[:, :, 0], Boxes[:, :, 1], Boxes[:, :, 2], Boxes[:, :, 3])
     x1 = K.reshape(x=x1, shape=(results.shape[0], -1, 1))

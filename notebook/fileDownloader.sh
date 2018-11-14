@@ -52,8 +52,10 @@ rm -rf test
 
 trainD=$dest/0
 testD=$dest/1
+restD=$dest/2
 mkdir -p $trainD
 mkdir -p $testD
+mkdir -p $restD
 
 count=0
 files=$dest/*.jpg
@@ -64,8 +66,11 @@ do
     if [ $count -le 20000 ];then
         mv $imgF $trainD
         mv $xmlF $trainD
-    else
+    elif [ $count -le 22000 ];then
         mv $imgF $testD
         mv $xmlF $testD
+    else
+        mv $imgF $restD
+        mv $xmlF $restD
     fi
 done

@@ -1,1 +1,1 @@
-fileDownloader.sh: download training dataset and testing dataset
+fileDownloader.sh: download training dataset and testing dataset from kaggle api

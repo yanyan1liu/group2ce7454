@@ -89,7 +89,7 @@ def main(iniModel, setting):
     folderCount = 1
     isDone = False
     for count in range(0, folderCount, 1):
-        srcDir = "group2/images/" + count 
+        srcDir = "group2/images/" + str(count)  
         print("+++ run: "+ srcDir + " " + str(datetime.now()) + "+++")
         train_data, train_label = load_DATA(srcDir)
         

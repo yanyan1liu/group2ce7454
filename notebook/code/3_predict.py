@@ -73,6 +73,7 @@ def load_DATA(srcDir):
 
 def draw(img, boxes, scores, classes):
     """Draw the boxes on the image.
+
     # Argument:
         image: original image.
         boxes: ndarray, boxes of objects.
@@ -88,14 +89,14 @@ def draw(img, boxes, scores, classes):
     boxes = K.eval(boxes)
     scores = K.eval(scores)
     classes = K.eval(classes)
+    i = 0
+    color = [(255, 0, 0), (0, 0, 255), (0, 255, 0), (255, 127, 80), (0, 128, 128), (255, 255, 0), (0, 255, 255), (255, 0, 255), (128, 128, 0), (0, 0, 0)]
     for box, score, cl in zip(boxes, scores, classes):
         x1, y1, x2, y2 = box
-        cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 0), 2)
-        cv2.putText(img, 'C'+str(cl), (int((x2+x1)/2.0), int((y1+y2)/2.0) - 6), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 1, cv2.LINE_AA)
-        print('cl:', cl)
+        cv2.rectangle(img, (x1, y1), (x2, y2), color[cl], 2)
+        i+=1
     img = img.transpose()
     img = array_to_img(img, data_format='channels_first')
-    img.show()
     img.save('result'+str(img_count)+'.png')
     img_count += 1
     

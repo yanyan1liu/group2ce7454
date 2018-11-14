@@ -41,7 +41,7 @@ class DecayByEpoch(keras.callbacks.Callback):
             K.set_value(self.model.optimizer.lr, new_lr)
             lr = self.model.optimizer.lr
         print(K.eval(lr))
-        
+
 # the learning rate decay in each batch end
 # and print the learning rate in each epoch end
 # beside, if the learning rate has been reduced to a minimum  times, this process stops
@@ -50,6 +50,7 @@ class lr_minimum(keras.callbacks.Callback):
         global Hdecay, _epoch, _batch_size
         iterations = batch + _epoch * 1000.0 / _batch_size
         print('iterations:', iterations)
+
         new_lr = initial_lr * 1.0 / (1.0 + Hdecay * iterations)
         print('The New_lr:', new_lr)
         if initial_lr / new_lr > lr_minimum_rate:
@@ -107,37 +108,42 @@ def Loss_v2(y_true, y_pred):
     #and obtaining the actual coordinates in the whole images
     xpred, ypred, wpred, hpred = return_coordinates(y_pred)
     x1_pred, y1_pred, x2_pred, y2_pred = transform_to_coordinate(xpred, ypred, wpred, hpred)
+    
+    #obtaining the predictive classes and actual classes
+    C_Class_Array = y_pred[:, :, :, 5:]
     x_max_true = y_true[:, :, :, 0]
     x_min_true = y_true[:, :, :, 1]
     y_max_true = y_true[:, :, :, 2]
     y_min_true = y_true[:, :, :, 3]
-    
-    #obtaining the predictive classes and actual classes
-    C_Class_Array = y_pred[:, :, :, 5:]
     C_index_true = y_true[:, :, :, 7:]
     C_index_true = K.cast(C_index_true, dtype='float32')
-     
+
     #obtaining which grid is having the middle_point_Object 
     #and only in this grid, we compute location loss and classification loss, and in the rest of grid, we only care about object loss
     X_matrix = np.ndarray((19, 14, 2), dtype='float32')
     X_matrix[:, :, 0] = np.arange(0, 608, 32).reshape(19, 1)
     X_matrix[:, :, 1] = np.arange(0, 417, 32).reshape(1, 14)
+    
     x1_window = X_matrix[:, :, 0]
     y1_window = X_matrix[:, :, 1]
     x2_window = X_matrix[:, :, 0] + 64
     y2_window = X_matrix[:, :, 1] + 64
-    matching = Checking_if_object(x1_window, y1_window, x2_window, y2_window, x_max_true, x_min_true, y_max_true, y_min_true)
-    mat = K.cast(matching, 'float32')
 
+    matching = Checking_if_object(x1_window, y1_window, x2_window, y2_window, x_max_true, x_min_true,
+                                  y_max_true, y_min_true)
+    mat = K.cast(matching, 'float32')
+    
     #compute the classification loss and put an acceleator on it
     #the loss = (1 - p) * entropy(p) * mat
     #p stands for the predictive probabilities of classes
     #mat informs if there is an object in this grid
     C_Class_Array = tf.clip_by_value(t=C_Class_Array, clip_value_min = _epsilon, clip_value_max = 1 - _epsilon)
     Classification_loss = categorical_crossentropy(y_true= C_index_true, y_pred= C_Class_Array)
-    Classification_loss = K.reshape(x=Classification_loss, shape=(-1, 19, 14, 1))
-    Classification_loss  = (1 - C_Class_Array) * C_index_true * Classification_loss * weight_Classification_loss
 
+    Classification_loss = K.reshape(x=Classification_loss, shape=(-1, 19, 14, 1))
+
+    Classification_loss  = (1 - C_Class_Array) * C_index_true * Classification_loss * weight_Classification_loss
+    
     #compute location loss    
     Localization_loss = weight_Localization_loss * mat * (K.square(x1_pred - x_min_true) + K.square(x2_pred - x_max_true) + K.square(
         y1_pred - y_min_true) + K.square(y2_pred - y_max_true))
@@ -162,26 +168,30 @@ def Loss_v3(y_true, y_pred):
     #and obtaining the actual coordinates in the whole images
     xpred, ypred, wpred, hpred = return_coordinates(y_pred)
     x1_pred, y1_pred, x2_pred, y2_pred = transform_to_coordinate(xpred, ypred, wpred, hpred)
+    
+    #obtaining the predictive classes and actual classes
+    C_Class_Array = y_pred[:, :, :, 5:]
     x_max_true = y_true[:, :, :, 0]
     x_min_true = y_true[:, :, :, 1]
     y_max_true = y_true[:, :, :, 2]
     y_min_true = y_true[:, :, :, 3]
-    
-    #obtaining the predictive classes and actual classes
-    C_Class_Array = y_pred[:, :, :, 5:]
     C_index_true = y_true[:, :, :, 7:]
     C_index_true = K.cast(C_index_true, dtype='float32')
     
     #obtaining which grid is having the middle_point_Object 
     #and only in this grid, we compute location loss and classification loss, and in the rest of grid, we only care about object loss   
     X_matrix = np.ndarray((19, 14, 2), dtype='float32')
+    
     X_matrix[:, :, 0] = np.arange(0, 608, 32).reshape(19, 1)
     X_matrix[:, :, 1] = np.arange(0, 417, 32).reshape(1, 14)
+    
     x1_window = X_matrix[:, :, 0]
     y1_window = X_matrix[:, :, 1]
     x2_window = X_matrix[:, :, 0] + 64
     y2_window = X_matrix[:, :, 1] + 64
-    matching = Checking_if_object(x1_window, y1_window, x2_window, y2_window, x_max_true, x_min_true, y_max_true, y_min_true)
+
+    matching = Checking_if_object(x1_window, y1_window, x2_window, y2_window, x_max_true, x_min_true,
+                                  y_max_true, y_min_true)
     mat = K.cast(matching, 'float32')
    
     #compute the classification loss and put an acceleator on it
@@ -189,10 +199,12 @@ def Loss_v3(y_true, y_pred):
     #p stands for the predictive probabilities of classes
     #mat informs if there is an object in this grid
     global _epsilon
+    
     C_Class_Array = tf.clip_by_value(t=C_Class_Array, clip_value_min = _epsilon, clip_value_max = 1 - _epsilon)
+    
+    #compute location loss    
     Classification_loss = categorical_crossentropy(y_true= C_index_true, y_pred= C_Class_Array) * weight_Classification_loss
 
-    #compute location loss    
     Localization_loss = weight_Localization_loss * mat * (K.square(x1_pred - x_min_true) + K.square(x2_pred - x_max_true) + K.square(
         y1_pred - y_min_true) + K.square(y2_pred - y_max_true))
     
@@ -205,12 +217,13 @@ def Loss_v3(y_true, y_pred):
 
     return Totalloss
 
+
 def generating_consequences(results):
     #########################################
     global _batch_size
     _batch_size = setting['batch_size']
     #########################################
-
+    
     # Obtain the Probability confidence
     Pc = results[:, :, :, 0]
     Pc = K.reshape(x = Pc, shape=(-1, 19, 14, 1))
@@ -233,7 +246,6 @@ def generating_consequences(results):
     # Picking the best as the scores in this bounding box
     Box_classes = K.argmax(Box_scores, axis=-1)
     Box_class_scores = K.max(Box_scores, axis=-1)
-    
     Box_classes = K.reshape(x=Box_classes, shape=(_batch_size, -1))
     Box_class_scores = K.reshape(x=Box_class_scores, shape=(_batch_size, -1))
     Boxes = K.reshape(x=Boxes, shape=(_batch_size, -1, 4))
@@ -242,7 +254,7 @@ def generating_consequences(results):
     # Finding out the indices and catch the value by gather function
     TOPK = tf.nn.top_k(input=Box_class_scores, k=5)
     indices = TOPK.indices
-    temp = K.zeros(K.shape(x=indices), dtype='int32')
+    temp = K.zeros(indices.get_shape(), dtype='int32')
     tmp = K.arange(0, _batch_size, 1, dtype='int32')
     tmp = K.reshape(x=tmp, shape=(_batch_size, -1))
     temp = temp + tmp

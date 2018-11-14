@@ -98,6 +98,7 @@ def Matching(x1_pred, y1_pred, x2_pred, y2_pred, x_max_true, x_min_true, y_max_t
     matching = K.greater_equal(IOU, 0.7)
     return matching
 
+
 def Testing_Performance_location(y_true, y_pred):
     # acquire the top five predictions in each image
     boxes, classes, scores = U.generating_consequences(y_pred)
@@ -149,7 +150,6 @@ def Testing_Performance_classification(y_true, y_pred):
     
     # compute the accuracy on the classification
     return K.cast(tf.count_nonzero(input_tensor=class_match), 'float32') / setting['batch_size']
-
 
 if __name__ == '__main__':
     # loading an existed model

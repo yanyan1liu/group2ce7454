@@ -5,10 +5,10 @@ from keras.models import load_model
 import xml.etree.ElementTree as ET
 from keras.preprocessing.image import load_img, img_to_array, array_to_img
 # from keras.utils import multi_gpu_model
-import pydot
+#import pydot
 import numpy as np
-from keras.utils import plot_model
-from IPython.display import SVG
+#from keras.utils import plot_model
+#from IPython.display import SVG
 from keras.utils.vis_utils import model_to_dot
 from datetime import datetime
 import os
@@ -102,8 +102,8 @@ def main(iniModel, setting):
 #             model = multi_gpu_model(model, gpus=4)
             model.compile(optimizer=optimizer, loss=lossFunction)
             iniModel = False
-            plot_model(model=model, to_file='Architecture.png', show_layer_names=False)
-            SVG(model_to_dot(model).create(prog='dot', format='svg'))
+            #plot_model(model=model, to_file='Architecture.png', show_layer_names=False)
+            #SVG(model_to_dot(model).create(prog='dot', format='svg'))
         elif not isDone:
             model = load_model(str(setting["weight_file"]+'.h5'), custom_objects={setting["loss"]: lossFunction})
 #             model = multi_gpu_model(model, gpus=4)

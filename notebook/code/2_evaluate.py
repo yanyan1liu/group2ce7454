@@ -144,7 +144,7 @@ if __name__ == '__main__':
     # loading an existed model
     model = load_model(str(setting["weight_file"]+'.h5'), custom_objects={setting["loss"]: lossFunction})
 #     model = multi_gpu_model(model, gpus=4)
-    srcDir = "group/images/1"
+    srcDir = "group2/images/1"
     print("+++ run: " + srcDir + " " + str(datetime.now()) + "+++")
     
     # loading the data

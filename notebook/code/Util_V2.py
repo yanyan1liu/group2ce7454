@@ -207,11 +207,8 @@ def Loss_v3(y_true, y_pred):
 
 def generating_consequences(results):
     #########################################
-    # this is to be compatible on predict and evaluate
-    # On predict, the input results are the all images' results and the batchsize is no longer being the setting parameter
-    # On evaluate, the input results are a batch of images' reults. The number is equal to setting parameter
     global _batch_size
-    _batch_size = K.shape(results)[0]
+    _batch_size = setting['batch_size']
     #########################################
 
     # Obtain the Probability confidence

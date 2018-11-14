@@ -5,7 +5,6 @@ from keras.preprocessing.image import load_img, img_to_array, array_to_img
 from keras.optimizers import Adam
 from keras.initializers import glorot_uniform
 #%matplotlib inline
-import Util_V1 as U
 import os
 from keras.utils.np_utils import to_categorical
 import keras.backend as K
@@ -14,7 +13,6 @@ K.set_learning_phase(1)
 from datetime import datetime
 import sys
 import numpy as np
-
 
 def inception_block(X, filters, stage, block):
     """
@@ -66,7 +64,6 @@ def inception_block(X, filters, stage, block):
 
     X = concatenate([X1, X2, X3, X4],  axis=-1)
     return X
-
 
 def network_architecture(input_data):
     """
